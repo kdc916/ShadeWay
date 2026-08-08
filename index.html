@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ShadeWay MVP v1.9.4.22</title>
+<title>ShadeWay MVP v1.9.4.23</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{color-scheme:dark;--bg:#0b1118;--panel:#101925;--card:#162232;--line:#2a3a4e;--text:#edf6ff;--muted:#9bb0c6;--accent:#62d58e}
@@ -1131,7 +1131,7 @@ body.map-zooming .leaflet-tooltip-pane{
   <div class="sheetGrip"></div>
   <button id="sheetToggleBtn" class="sheetToggle" type="button" aria-label="메뉴 크게 보기">⌃</button>
 </div>
-<div class="title">🌳 ShadeWay</div><div id="mobileQuickStatus" class="mobileQuickStatus">📍 현재 위치 확인 중</div><div id="mobileNavSummary" class="mobileNavSummary">목적지를 정하면 추천 경로의 시간·거리·그늘을 가장 먼저 보여줍니다.</div><div class="sub">MVP v1.9.4.22 · Mobile Nearest Search Focus · OSM + Overture</div><div class="unifiedHint">목적지 검색 → 경로 분석 → 실시간 보행을 한 패널에서 바로 사용합니다.</div>
+<div class="title">🌳 ShadeWay</div><div id="mobileQuickStatus" class="mobileQuickStatus">📍 현재 위치 확인 중</div><div id="mobileNavSummary" class="mobileNavSummary">목적지를 정하면 추천 경로의 시간·거리·그늘을 가장 먼저 보여줍니다.</div><div class="sub">MVP v1.9.4.23 · Mobile Nearest Search Popup · OSM + Overture</div><div class="unifiedHint">목적지 검색 → 경로 분석 → 실시간 보행을 한 패널에서 바로 사용합니다.</div>
 <div class="stepTabs hideWalk" aria-label="ShadeWay 단계">
   <button id="tabSearch" class="stepTab active" type="button" aria-current="step">1. 검색</button>
   <button id="tabRoute" class="stepTab" type="button" aria-disabled="true">2. 경로</button>
@@ -1360,7 +1360,7 @@ body.map-zooming .leaflet-tooltip-pane{
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),FALLBACK={lat:37.5665,lon:126.9780},RADIUS=600,FLOOR=3,ROUTE_SAMPLE_SPACING=280,ROUTE_LOAD_RADIUS=240,MAX_ROUTE_LOAD_POINTS=16,VEG_RADIUS=520,CACHE_TTL=10*60*1000;
-let map,userMarker,destMarker,buildingLayer,shadowLayer,routeLayer,vegLayer,lat=FALLBACK.lat,lon=FALLBACK.lon,dest=null,destName='',buildings=[],vegetation=[],shadowPolys=[],buildingShadePolys=[],vegShadePolys=[],busy=false,lastRoutes=[],lastBestRoute=null,selectedRouteMode='custom',suggestedDetour=null,weatherData=null,watchId=null,walkActive=false,lastWalkFix=null,lastRerouteAt=0,lastHeading=0,highlightLayer=null,lastSunAlertAt=0,lastDetourCheckAt=0,lastSmartSwitchAt=0,walkSpeedMps=1.333,speedSamples=[],lastSpeedPoint=null,recentPlaces=[],favoritePlaces=[],viewportLoadTimer=null,lastViewportKey='',routeRequestActive=false,offRouteAboveCount=0,onRouteRecoveryCount=0,offRouteConfirmed=false,lastMovementAt=0,lastMovementFix=null;const queryCache=new Map(),elevationCache=new Map(),requestControllers=new Map(),requestGenerations=new Map();
+let map,userMarker,destMarker,searchPreviewMarker,buildingLayer,shadowLayer,routeLayer,vegLayer,lat=FALLBACK.lat,lon=FALLBACK.lon,dest=null,destName='',buildings=[],vegetation=[],shadowPolys=[],buildingShadePolys=[],vegShadePolys=[],busy=false,lastRoutes=[],lastBestRoute=null,selectedRouteMode='custom',suggestedDetour=null,weatherData=null,watchId=null,walkActive=false,lastWalkFix=null,lastRerouteAt=0,lastHeading=0,highlightLayer=null,lastSunAlertAt=0,lastDetourCheckAt=0,lastSmartSwitchAt=0,walkSpeedMps=1.333,speedSamples=[],lastSpeedPoint=null,recentPlaces=[],favoritePlaces=[],viewportLoadTimer=null,lastViewportKey='',routeRequestActive=false,offRouteAboveCount=0,onRouteRecoveryCount=0,offRouteConfirmed=false,lastMovementAt=0,lastMovementFix=null;const queryCache=new Map(),elevationCache=new Map(),requestControllers=new Map(),requestGenerations=new Map();
 let buildingRevision=0,vegetationRevision=0,timelineFrame=0,progressiveShadowFrame=0;
 const loadedBuildingTiles=new Set(),failedBuildingTileAt=new Map(),renderedBuildingIds=new Set();
 let viewportLoadGeneration=0,persistentDbPromise=null,liveRouteClockTimer=null;
@@ -1780,6 +1780,24 @@ function polygonCenter(points){
   }
   return n?[sy/n,sx/n]:[lat,lon];
 }
+function clearSearchPreviewMarker(){
+  if(!searchPreviewMarker||!map)return;
+  try{map.removeLayer(searchPreviewMarker)}catch(e){}
+  searchPreviewMarker=null;
+}
+function showNearestSearchPreview(p){
+  if(!map||!p||!Number.isFinite(+p.lat)||!Number.isFinite(+p.lon))return;
+  clearSearchPreviewMarker();
+  const distance=Number.isFinite(+p.distance)?formatSearchDistance(+p.distance):'';
+  const display=escapeHtmlText(p.display||'');
+  const popup=`<div class="popupPlaceTitle">📍 ${escapeHtmlText(p.name||'검색 결과')}</div>
+    <div class="popupMeta">${distance?`현재 위치 기준 <b>${escapeHtmlText(distance)}</b><br>`:''}${display}</div>
+    ${popupRouteButtonHtml(+p.lat,+p.lon,p.name||'검색 결과','🚶 이곳으로 경로 탐색')}`;
+  searchPreviewMarker=L.marker([+p.lat,+p.lon],{pane:'walkMarkerPane'})
+    .addTo(map)
+    .bindPopup(popup,{autoPan:false,maxWidth:280,closeButton:true,className:'searchPreviewPopup'});
+  searchPreviewMarker.openPopup();
+}
 function popupRouteButtonHtml(a,o,name='선택 위치',label='🚶 경로 탐색'){
   const safeName=escapeHtmlText(name);
   return `<div class="popupRouteActions">
@@ -1832,6 +1850,7 @@ function drawUser(real,snapped=null){
   }
 }
 function setDestination(a,o,name='지도에서 선택한 목적지',options={}){
+  clearSearchPreviewMarker();
   dest={lat:a,lon:o};destName=name;mobileRouteAutoCollapsed=false;resetDestinationLock(a,o,name);document.body.classList.add('has-destination');
   if(destMarker)map.removeLayer(destMarker);
   const popup=`<div class="popupPlaceTitle">${escapeHtmlText(destName)}</div>${popupRouteButtonHtml(a,o,destName,'🚶 경로 탐색')}`;
@@ -2039,6 +2058,7 @@ async function searchPlaces(){
   const {controller,generation}=beginRequest('search');
   const anchor=getSearchAnchor(),radiusKm=getSearchRadiusKm(),radiusText=formatRadiusKm(radiusKm);
   $('searchBtn').disabled=true;$('searchBtn').textContent='검색 중';
+  clearSearchPreviewMarker();
   document.body.classList.remove('routing-from-search');
   $('searchResults').style.display='';
   $('searchResults').innerHTML=`<div class="searchMeta">📍 ${escapeHtmlText(anchor.label)} 기준 · ${radiusText} 안에서 가까운 순으로 찾는 중…</div>`;
@@ -2056,8 +2076,8 @@ async function searchPlaces(){
     window.__searchScope=scope;
     renderSearchResults(items,{anchor,scope,radiusKm});
 
-    // v1.9.4.22: on mobile, move the visible map to the nearest search result.
-    // This is preview-only: it does NOT select the destination or start routing.
+    // v1.9.4.23: on mobile, focus the nearest result AND open its place popup.
+    // Preview-only: the destination is not committed until the user taps the route action.
     if(isMobileLayout()&&items.length){
       const nearest=items[0];
       if(Number.isFinite(nearest.lat)&&Number.isFinite(nearest.lon)){
@@ -2065,6 +2085,9 @@ async function searchPlaces(){
         requestAnimationFrame(()=>{
           focusMapPointVisible([nearest.lat,nearest.lon],{zoom:searchZoom,animate:true});
           if($('hint'))$('hint').textContent=`가장 가까운 검색 결과 · ${nearest.name}`;
+          setTimeout(()=>{
+            if(window.__lastSearchResults===items)showNearestSearchPreview(nearest);
+          },320);
         });
       }
     }
@@ -2097,6 +2120,7 @@ function renderSearchResults(items,meta={}){
   const radiusKm=meta.radiusKm||getSearchRadiusKm(),radiusText=formatRadiusKm(radiusKm);
 
   if(!items.length){
+    clearSearchPreviewMarker();
     $('searchResults').innerHTML=`<div class="searchMeta">📍 ${escapeHtmlText(anchor.label)} 기준 · 반경 ${radiusText}</div>
       <div class="emptyNote"><b>${radiusText} 안에 검색 결과가 없습니다.</b><br>걷는 거리라면 검색 반경을 조금 늘려 다시 검색해 주세요.</div>`;
     return;
@@ -5486,7 +5510,7 @@ function scheduleTimelineRefresh(step=10){
     scheduleTimeWindowComparison(120);
   });
 }
-function clearRoute(){requestControllers.get('route')?.abort();requestControllers.get('detours')?.abort();detourGenerationSerial++;manualSelectedRoute=null;destinationLock=null;mobileRouteAutoCollapsed=false;clearTimeout(timeCompareTimer);clearRouteFeedback();routeRequestActive=false;stopWalk();suggestedDetour=null;dest=null;destName='';if(destMarker){map.removeLayer(destMarker);destMarker=null}routeLayer.clearLayers();lastRoutes=[];$('routes').innerHTML='';$('modeCompare').innerHTML='';selectedRouteMode='custom';$('routeBtn').disabled=true;$('bestTimeBtn').disabled=true;$('walkBtn').disabled=true;$('rerouteBtn').disabled=true;syncStepButtons();$('bestTimeResult').innerHTML='';lastBestRoute=null;document.body.classList.remove('has-route','has-destination','walk-active','routing-from-search','mobile-settings-open');if(navInfoLayer)navInfoLayer.clearLayers();if(maneuverLayer)maneuverLayer.clearLayers();if(crossingLayer)crossingLayer.clearLayers();routeCrossings=[];lastCrossingRouteSignature='';requestControllers.get('crossings')?.abort();updateMobileNavSummary(null,null);if($('timeWindowCompare'))$('timeWindowCompare').style.display='none';updateDestinationLockUI();if($('selectedDestinationName'))$('selectedDestinationName').textContent='목적지';if($('selectedDestinationMeta'))$('selectedDestinationMeta').textContent='경로를 자동으로 분석합니다.';if($('searchResults'))$('searchResults').style.display='';if($('routeDebug'))$('routeDebug').textContent='목적지를 지정하면 경로 분석을 시작할 수 있습니다.';$('hint').textContent='지도를 눌러 목적지를 지정하세요'}
+function clearRoute(){clearSearchPreviewMarker();requestControllers.get('route')?.abort();requestControllers.get('detours')?.abort();detourGenerationSerial++;manualSelectedRoute=null;destinationLock=null;mobileRouteAutoCollapsed=false;clearTimeout(timeCompareTimer);clearRouteFeedback();routeRequestActive=false;stopWalk();suggestedDetour=null;dest=null;destName='';if(destMarker){map.removeLayer(destMarker);destMarker=null}routeLayer.clearLayers();lastRoutes=[];$('routes').innerHTML='';$('modeCompare').innerHTML='';selectedRouteMode='custom';$('routeBtn').disabled=true;$('bestTimeBtn').disabled=true;$('walkBtn').disabled=true;$('rerouteBtn').disabled=true;syncStepButtons();$('bestTimeResult').innerHTML='';lastBestRoute=null;document.body.classList.remove('has-route','has-destination','walk-active','routing-from-search','mobile-settings-open');if(navInfoLayer)navInfoLayer.clearLayers();if(maneuverLayer)maneuverLayer.clearLayers();if(crossingLayer)crossingLayer.clearLayers();routeCrossings=[];lastCrossingRouteSignature='';requestControllers.get('crossings')?.abort();updateMobileNavSummary(null,null);if($('timeWindowCompare'))$('timeWindowCompare').style.display='none';updateDestinationLockUI();if($('selectedDestinationName'))$('selectedDestinationName').textContent='목적지';if($('selectedDestinationMeta'))$('selectedDestinationMeta').textContent='경로를 자동으로 분석합니다.';if($('searchResults'))$('searchResults').style.display='';if($('routeDebug'))$('routeDebug').textContent='목적지를 지정하면 경로 분석을 시작할 수 있습니다.';$('hint').textContent='지도를 눌러 목적지를 지정하세요'}
 $('copyDiagnosticsBtn').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(diagnosticLines().join('\n'));$('copyDiagnosticsBtn').textContent='복사됨';setTimeout(()=>$('copyDiagnosticsBtn').textContent='진단 정보 복사',1200)}
   catch(e){$('copyDiagnosticsBtn').textContent='복사 실패'}
