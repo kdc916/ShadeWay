@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ShadeWay MVP v1.9.4.21</title>
+<title>ShadeWay MVP v1.9.4.22</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{color-scheme:dark;--bg:#0b1118;--panel:#101925;--card:#162232;--line:#2a3a4e;--text:#edf6ff;--muted:#9bb0c6;--accent:#62d58e}
@@ -1101,7 +1101,7 @@ body.map-zooming .leaflet-tooltip-pane{
 
 
 /* ================================================================
-   v1.9.4.21 Mobile current-location FAB restore
+   v1.9.4.22 Mobile nearest search map focus
    Regression fix: the later desktop/common .mapLocateFab rule reset
    mobile bottom positioning to 22px, placing the control underneath
    the bottom sheet. Use the measured sheet height on mobile.
@@ -1131,7 +1131,7 @@ body.map-zooming .leaflet-tooltip-pane{
   <div class="sheetGrip"></div>
   <button id="sheetToggleBtn" class="sheetToggle" type="button" aria-label="메뉴 크게 보기">⌃</button>
 </div>
-<div class="title">🌳 ShadeWay</div><div id="mobileQuickStatus" class="mobileQuickStatus">📍 현재 위치 확인 중</div><div id="mobileNavSummary" class="mobileNavSummary">목적지를 정하면 추천 경로의 시간·거리·그늘을 가장 먼저 보여줍니다.</div><div class="sub">MVP v1.9.4.21 · Mobile Locate FAB Restore · OSM + Overture</div><div class="unifiedHint">목적지 검색 → 경로 분석 → 실시간 보행을 한 패널에서 바로 사용합니다.</div>
+<div class="title">🌳 ShadeWay</div><div id="mobileQuickStatus" class="mobileQuickStatus">📍 현재 위치 확인 중</div><div id="mobileNavSummary" class="mobileNavSummary">목적지를 정하면 추천 경로의 시간·거리·그늘을 가장 먼저 보여줍니다.</div><div class="sub">MVP v1.9.4.22 · Mobile Nearest Search Focus · OSM + Overture</div><div class="unifiedHint">목적지 검색 → 경로 분석 → 실시간 보행을 한 패널에서 바로 사용합니다.</div>
 <div class="stepTabs hideWalk" aria-label="ShadeWay 단계">
   <button id="tabSearch" class="stepTab active" type="button" aria-current="step">1. 검색</button>
   <button id="tabRoute" class="stepTab" type="button" aria-disabled="true">2. 경로</button>
@@ -2055,6 +2055,19 @@ async function searchPlaces(){
     window.__searchAnchor=anchor;
     window.__searchScope=scope;
     renderSearchResults(items,{anchor,scope,radiusKm});
+
+    // v1.9.4.22: on mobile, move the visible map to the nearest search result.
+    // This is preview-only: it does NOT select the destination or start routing.
+    if(isMobileLayout()&&items.length){
+      const nearest=items[0];
+      if(Number.isFinite(nearest.lat)&&Number.isFinite(nearest.lon)){
+        const searchZoom=map.getZoom()<17?17:null;
+        requestAnimationFrame(()=>{
+          focusMapPointVisible([nearest.lat,nearest.lon],{zoom:searchZoom,animate:true});
+          if($('hint'))$('hint').textContent=`가장 가까운 검색 결과 · ${nearest.name}`;
+        });
+      }
+    }
   }catch(e){
     if(e?.name==='AbortError'&&!isCurrentRequest('search',controller,generation))return;
     console.error(e);
