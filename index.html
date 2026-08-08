@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ShadeWay MVP v1.9.4.18</title>
+<title>ShadeWay MVP v1.9.4.21</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{color-scheme:dark;--bg:#0b1118;--panel:#101925;--card:#162232;--line:#2a3a4e;--text:#edf6ff;--muted:#9bb0c6;--accent:#62d58e}
@@ -1081,6 +1081,47 @@ body.map-zooming .leaflet-tooltip-pane{
 @media(min-width:430px) and (max-width:800px){
   .timelineBrandText{display:inline}
 }
+
+.buildingSourceCard{
+  margin-top:8px;padding:9px 10px;border:1px solid #2a3a4e;border-radius:10px;
+  background:#111b28;color:#c8d6e4;font-size:10px;line-height:1.45
+}
+.buildingSourceHead{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.buildingSourceHead b{color:#edf6ff;font-size:11px}
+.buildingSourceState{margin-top:5px;color:#8fa5b9}
+.buildingSourceState.ok{color:#9eeabb}
+.buildingSourceState.warn{color:#ffc58b}
+.buildingSourceMini{margin-top:4px;color:#72899e;font-size:9px}
+.buildingFreshRow{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;margin-top:7px}
+.buildingFreshRow button{margin:0!important;min-height:40px!important}
+@media(max-width:800px){
+  .buildingSourceCard{padding:8px 9px}
+  .buildingFreshRow{grid-template-columns:1fr}
+}
+
+
+/* ================================================================
+   v1.9.4.21 Mobile current-location FAB restore
+   Regression fix: the later desktop/common .mapLocateFab rule reset
+   mobile bottom positioning to 22px, placing the control underneath
+   the bottom sheet. Use the measured sheet height on mobile.
+   ================================================================ */
+@media(max-width:800px){
+  body:not(.has-route) .mapLocateFab,
+  body.walk-mode .mapLocateFab,
+  body.mobile-settings-open .mapLocateFab{
+    display:grid!important;
+    position:absolute!important;
+    z-index:1800!important;
+    right:calc(14px + env(safe-area-inset-right))!important;
+    bottom:calc(var(--mobile-sheet-px,36dvh) + var(--mobile-sheet-gap,18px))!important;
+  }
+  /* Route-result mode keeps the dedicated route-dock clearance from v1.9.4.17. */
+  body.has-route:not(.walk-mode):not(.mobile-settings-open) .mapLocateFab{
+    display:grid!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1090,7 +1131,7 @@ body.map-zooming .leaflet-tooltip-pane{
   <div class="sheetGrip"></div>
   <button id="sheetToggleBtn" class="sheetToggle" type="button" aria-label="메뉴 크게 보기">⌃</button>
 </div>
-<div class="title">🌳 ShadeWay</div><div id="mobileQuickStatus" class="mobileQuickStatus">📍 현재 위치 확인 중</div><div id="mobileNavSummary" class="mobileNavSummary">목적지를 정하면 추천 경로의 시간·거리·그늘을 가장 먼저 보여줍니다.</div><div class="sub">MVP v1.9.4.18 · ShadeWay Identity UI · Dark Route Console</div><div class="unifiedHint">목적지 검색 → 경로 분석 → 실시간 보행을 한 패널에서 바로 사용합니다.</div>
+<div class="title">🌳 ShadeWay</div><div id="mobileQuickStatus" class="mobileQuickStatus">📍 현재 위치 확인 중</div><div id="mobileNavSummary" class="mobileNavSummary">목적지를 정하면 추천 경로의 시간·거리·그늘을 가장 먼저 보여줍니다.</div><div class="sub">MVP v1.9.4.21 · Mobile Locate FAB Restore · OSM + Overture</div><div class="unifiedHint">목적지 검색 → 경로 분석 → 실시간 보행을 한 패널에서 바로 사용합니다.</div>
 <div class="stepTabs hideWalk" aria-label="ShadeWay 단계">
   <button id="tabSearch" class="stepTab active" type="button" aria-current="step">1. 검색</button>
   <button id="tabRoute" class="stepTab" type="button" aria-disabled="true">2. 경로</button>
@@ -1141,6 +1182,19 @@ body.map-zooming .leaflet-tooltip-pane{
     <button id="locateBtn">📍 현재 위치 다시 찾기</button>
     <button id="loadBtn" class="secondary">🏢 현재 화면 건물 다시 불러오기</button>
     <button id="shadowRefreshBtn" class="secondary">🌑 그림자 다시 계산</button>
+    <div class="buildingSourceCard">
+      <div class="buildingSourceHead"><b>🏙 건물 데이터 최신성</b><span id="buildingSourceBadge">OSM + Overture</span></div>
+      <div class="switchRow" style="margin-top:7px">
+        <label for="overtureBuildings" style="margin:0">Overture 건물 자동 보완</label>
+        <input id="overtureBuildings" type="checkbox" checked>
+      </div>
+      <div id="buildingSourceState" class="buildingSourceState">건물 원본 상태 확인 중…</div>
+      <div id="buildingSourceMini" class="buildingSourceMini">OSM에 없는 건물을 Overture 월간 데이터로 보완합니다.</div>
+      <div class="buildingFreshRow">
+        <span>로컬 건물 캐시는 24시간마다 새 원본을 다시 확인합니다.</span>
+        <button id="buildingFreshBtn" class="secondary" type="button">🛰 최신 원본 확인</button>
+      </div>
+    </div>
   </div>
 </details>
 <button id="toRouteBtn" class="secondary" disabled>다음: 경로 설정 →</button>
@@ -1322,6 +1376,12 @@ let walkTravelM=0,estimatedSteps=0,lastStepFix=null;
 let maneuverLayer=null,nextManeuverMarker=null,lastTurnAlertKey='',lastTurnAlertStage='';
 let crossingLayer=null,routeCrossings=[],lastCrossingRouteSignature='',crossingLoadSerial=0;
 const crossingCache=new Map();
+let lastOsmDataTimestamp='',lastBuildingNetworkAt=0,lastBuildingCacheHitAt=0;
+let overtureEnabled=true,overtureRelease='',overtureStatus='대기',overtureArchive=null,overtureHeader=null,overtureLibPromise=null,overtureAttributionAdded=false;
+const overtureTileCache=new Map();
+// Last-known-good fallback. The STAC catalog remains the primary source of truth.
+const OVERTURE_FALLBACK_RELEASE='2026-06-17.0';
+
 let lastLiveContinuityRerouteAt=0;
 const EST_STEP_LENGTH_M=.72;
 const routeFeedbackItems=[];
@@ -1333,6 +1393,7 @@ const diagnostics={
   location:{status:'idle',detail:''},
   routing:{status:'idle',provider:'',durationMs:0,candidatesRaw:0,candidatesUnique:0},
   buildings:{status:'idle',count:0,durationMs:0,detail:''},
+  buildingSource:{status:'idle',osmTimestamp:'',overtureRelease:'',overtureAdded:0},
   vegetation:{status:'idle',count:0,durationMs:0},
   elevation:{status:'idle',sampleCount:0},
   weather:{status:'idle'},
@@ -1344,7 +1405,8 @@ function diagnosticLines(){
   return [
     `위치: ${d.location.status}${d.location.detail?` · ${d.location.detail}`:''}`,
     `경로: ${d.routing.status}${d.routing.provider?` · ${d.routing.provider}`:''}${ms(d.routing.durationMs)} · 후보 ${d.routing.candidatesUnique||0}/${d.routing.candidatesRaw||0}`,
-    `건물: ${d.buildings.status} · ${d.buildings.count||0}개${ms(d.buildings.durationMs)}${d.buildings.detail?` · ${d.buildings.detail}`:''} · Fast ways+parts`,
+    `건물: ${d.buildings.status} · ${d.buildings.count||0}개${ms(d.buildings.durationMs)}${d.buildings.detail?` · ${d.buildings.detail}`:''}`,
+    `건물 원본: ${d.buildingSource.status}${d.buildingSource.osmTimestamp?` · OSM ${d.buildingSource.osmTimestamp}`:''}${d.buildingSource.overtureRelease?` · Overture ${d.buildingSource.overtureRelease}`:''}${d.buildingSource.overtureAdded?` · 보완 +${d.buildingSource.overtureAdded}`:''}`,
     `수목: ${d.vegetation.status} · ${d.vegetation.count||0}개`,
     `고도: ${d.elevation.status} · 샘플 ${d.elevation.sampleCount||0}`,
     `날씨: ${d.weather.status}`,
@@ -1395,7 +1457,7 @@ map.getPane('routeLabelPane').style.pointerEvents='none';
 
 map.createPane('walkMarkerPane');map.getPane('walkMarkerPane').style.zIndex=650;
 shadowLayer=L.layerGroup().addTo(map);vegLayer=L.layerGroup().addTo(map);buildingLayer=L.layerGroup().addTo(map);routeLayer=L.layerGroup().addTo(map);highlightLayer=L.layerGroup().addTo(map);crossingLayer=L.layerGroup().addTo(map);navInfoLayer=L.layerGroup().addTo(map);maneuverLayer=L.layerGroup().addTo(map);
-setNow();loadSavedPlaces();loadWalkSettings();updateSmartRuleUI();updateSavedPlacesUI();updateBalanceUI();
+setNow();loadSavedPlaces();loadWalkSettings();loadBuildingSourceSettings();updateSmartRuleUI();updateSavedPlacesUI();updateBalanceUI();
 map.on('click',e=>setDestination(e.latlng.lat,e.latlng.lng,'지도에서 선택한 위치'));
 map.on('zoomstart',beginMapZoomTransition);
 map.on('zoomend',endMapZoomTransition);
@@ -2258,7 +2320,77 @@ function setCached(key,data){
   $('cacheStat').textContent=queryCache.size;
 }
 
-const PERSISTENT_BUILDING_TTL=7*24*60*60*1000;
+function loadBuildingSourceSettings(){
+  try{
+    const saved=localStorage.getItem('shadeway_overture_buildings');
+    overtureEnabled=saved===null?true:saved==='1';
+  }catch(e){overtureEnabled=true}
+  if($('overtureBuildings'))$('overtureBuildings').checked=overtureEnabled;
+  updateBuildingSourceUI();
+}
+function saveBuildingSourceSettings(){
+  overtureEnabled=$('overtureBuildings')?.checked!==false;
+  try{localStorage.setItem('shadeway_overture_buildings',overtureEnabled?'1':'0')}catch(e){}
+  updateBuildingSourceUI();
+}
+function shortIsoDate(v){
+  if(!v)return '';
+  const d=new Date(v);
+  if(Number.isNaN(+d))return String(v).replace('T',' ').replace('Z','');
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function buildingSourceCounts(){
+  let osm=0,overture=0;
+  for(const b of buildings){
+    if(b.source==='Overture')overture++;
+    else osm++;
+  }
+  return {osm,overture};
+}
+function updateBuildingSourceUI(){
+  const el=$('buildingSourceState'),mini=$('buildingSourceMini'),badge=$('buildingSourceBadge');
+  const c=buildingSourceCounts();
+  if(badge)badge.textContent=overtureEnabled?'OSM + Overture':'OSM';
+  if(!el)return;
+  const osmText=lastOsmDataTimestamp?`OSM 원본 ${shortIsoDate(lastOsmDataTimestamp)}`:'OSM 원본 시각 대기';
+  const ovText=overtureEnabled
+    ?(overtureRelease?`Overture ${overtureRelease}`:`Overture ${overtureStatus}`)
+    :'Overture 끔';
+  el.textContent=`${osmText} · ${ovText} · 화면 OSM ${c.osm.toLocaleString()} / 보완 ${c.overture.toLocaleString()}`;
+  el.className=`buildingSourceState ${overtureStatus==='실패'?'warn':((lastOsmDataTimestamp||c.overture)?'ok':'')}`;
+  if(mini){
+    mini.textContent=overtureStatus==='실패'
+      ?'Overture 연결이 실패해도 OSM 건물과 그림자는 계속 사용할 수 있습니다.'
+      :'OSM에 없는 후보만 Overture에서 보완하며, 겹치는 건물은 자동 제거합니다.';
+  }
+  setDiag('buildingSource',{
+    status:overtureEnabled?`OSM + Overture (${overtureStatus})`:'OSM 전용',
+    osmTimestamp:lastOsmDataTimestamp?shortIsoDate(lastOsmDataTimestamp):'',
+    overtureRelease:overtureRelease,
+    overtureAdded:c.overture
+  });
+}
+async function clearPersistentBuildingCache(){
+  const db=await openShadeWayDB();if(!db)return;
+  await new Promise(resolve=>{
+    try{
+      const tx=db.transaction('buildingTiles','readwrite');
+      const req=tx.objectStore('buildingTiles').clear();
+      req.onsuccess=req.onerror=()=>resolve();
+    }catch(e){resolve()}
+  });
+}
+function clearMemoryBuildingCaches(){
+  for(const key of [...queryCache.keys()]){
+    if(String(key).startsWith('bldtile:'))queryCache.delete(key);
+  }
+  loadedBuildingTiles.clear();
+  failedBuildingTileAt.clear();
+  detailedRelationTiles.clear();
+  overtureTileCache.clear();
+}
+
+const PERSISTENT_BUILDING_TTL=24*60*60*1000;
 function openShadeWayDB(){
   if(persistentDbPromise)return persistentDbPromise;
   persistentDbPromise=new Promise(resolve=>{
@@ -2325,7 +2457,7 @@ function mergeVegetation(items){
 
 function buildingFromElement(x){
   const inf=hInfo(x.tags||{});
-  const make=(id,p)=>({id,p,t:x.tags||{},h:inf.h,src:inf.src,method:inf.method,known:inf.known,isPart:!!x.tags?.['building:part']});
+  const make=(id,p)=>({id,p,t:x.tags||{},h:inf.h,src:inf.src,method:inf.method,known:inf.known,isPart:!!x.tags?.['building:part'],source:'OSM'});
   if(Array.isArray(x.geometry)&&x.geometry.length>=3){
     return [make(`${x.type}/${x.id}`,x.geometry.map(g=>[g.lat,g.lon]))];
   }
@@ -2346,13 +2478,13 @@ const BUILDING_OVERPASS_ENDPOINTS=[
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
 ];
 async function fetchOverpassRace(query,parentSignal=null,timeoutMs=4800){
-  const children=[];
-  let parentAbort=null;
+  const children=[],parentAbortHandlers=[];
   try{
     const jobs=BUILDING_OVERPASS_ENDPOINTS.map(ep=>{
       const controller=new AbortController();children.push(controller);
       if(parentSignal){
-        parentAbort=()=>controller.abort();
+        const parentAbort=()=>controller.abort();
+        parentAbortHandlers.push(parentAbort);
         if(parentSignal.aborted)controller.abort();
         else parentSignal.addEventListener('abort',parentAbort,{once:true});
       }
@@ -2374,35 +2506,57 @@ async function fetchOverpassRace(query,parentSignal=null,timeoutMs=4800){
       });
     }
     children.forEach(c=>{if(!c.signal.aborted)c.abort()});
+    if(data?.osm3s?.timestamp_osm_base){
+      lastOsmDataTimestamp=data.osm3s.timestamp_osm_base;
+      lastBuildingNetworkAt=Date.now();
+      updateBuildingSourceUI();
+    }
     return data;
   }finally{
-    if(parentSignal&&parentAbort)parentSignal.removeEventListener('abort',parentAbort);
+    if(parentSignal){
+      for(const handler of parentAbortHandlers)parentSignal.removeEventListener('abort',handler);
+    }
   }
 }
 
-async function fetchBuildingsBBox(bounds,parentSignal=null,timeoutMs=4800){
+async function fetchBuildingsBBox(bounds,parentSignal=null,timeoutMs=4800,options={}){
   const s=bounds.getSouth(),w=bounds.getWest(),n=bounds.getNorth(),e=bounds.getEast();
-  const key=`bldtile:v4:${s.toFixed(5)},${w.toFixed(5)},${n.toFixed(5)},${e.toFixed(5)}`;
-  const mem=getCached(key);if(mem)return mem;
+  const key=`bldtile:v5:${s.toFixed(5)},${w.toFixed(5)},${n.toFixed(5)},${e.toFixed(5)}`;
+  const forceNetwork=!!options.forceNetwork;
 
-  const persisted=await persistentBuildingGet(key);
-  if(persisted?.data?.length){
-    setCached(key,persisted.data);
-    // Return cached geometry immediately. Network refresh is background only when stale.
-    if(persisted.stale){
-      const qRefresh=`[out:json][timeout:8];(way["building"](${s},${w},${n},${e});way["building:part"](${s},${w},${n},${e}););out tags geom qt;`;
-      fetchOverpassRace(qRefresh,null,timeoutMs).then(data=>{
-        const out=[];for(const x of data.elements||[])out.push(...buildingFromElement(x));
-        setCached(key,out);persistentBuildingPut(key,out);
-      }).catch(()=>{});
+  if(!forceNetwork){
+    const mem=getCached(key);
+    if(mem){lastBuildingCacheHitAt=Date.now();return mem}
+
+    const persisted=await persistentBuildingGet(key);
+    if(persisted&&Array.isArray(persisted.data)){
+      setCached(key,persisted.data);
+      lastBuildingCacheHitAt=Date.now();
+
+      // Use cached geometry immediately, but a 24h-old tile refreshes in background
+      // AND merges new buildings into the live map when it returns.
+      if(persisted.stale){
+        const qRefresh=`[out:json][timeout:8];(way["building"](${s},${w},${n},${e});way["building:part"](${s},${w},${n},${e}););out tags geom qt;`;
+        fetchOverpassRace(qRefresh,null,timeoutMs).then(data=>{
+          const out=[];for(const x of data.elements||[])out.push(...buildingFromElement(x));
+          setCached(key,out);persistentBuildingPut(key,out);
+          const added=mergeBuildings(out);
+          if(added.length){
+            reestimateUnknownHeights();
+            queueBuildingLayerItems(added);
+          }
+          updateBuildingSourceUI();
+        }).catch(()=>{});
+      }
+      return persisted.data;
     }
-    return persisted.data;
   }
 
   const q=`[out:json][timeout:8];(way["building"](${s},${w},${n},${e});way["building:part"](${s},${w},${n},${e}););out tags geom qt;`;
   const data=await fetchOverpassRace(q,parentSignal,timeoutMs);
   const out=[];for(const x of data.elements||[])out.push(...buildingFromElement(x));
   setCached(key,out);persistentBuildingPut(key,out);
+  updateBuildingSourceUI();
   return out;
 }
 const detailedRelationTiles=new Set();
@@ -2432,9 +2586,11 @@ function beginMapZoomTransition(){
   if(progressiveShadowFrame){cancelAnimationFrame(progressiveShadowFrame);progressiveShadowFrame=0}
   deferredShadowRender=false;
 
-  // Stop a viewport request that was started for the previous zoom level.
-  const old=requestControllers.get('viewport-buildings');
-  if(old&&!old.signal.aborted)old.abort();
+  // Stop requests that belong to the previous viewport/zoom level.
+  for(const key of ['viewport-buildings','overture-buildings']){
+    const old=requestControllers.get(key);
+    if(old&&!old.signal.aborted)old.abort();
+  }
   viewportLoadGeneration++;
 }
 function endMapZoomTransition(){
@@ -2450,6 +2606,214 @@ function endMapZoomTransition(){
   }
   scheduleViewportBuildingLoad(ZOOM_SETTLE_MS);
 }
+async function ensureOvertureLibraries(){
+  if(overtureLibPromise)return overtureLibPromise;
+  overtureLibPromise=(async()=>{
+    const [pmMod,vtMod,pbfMod]=await Promise.all([
+      import('https://esm.sh/pmtiles@4.4.1'),
+      import('https://esm.sh/@mapbox/vector-tile@2.0.4'),
+      import('https://esm.sh/pbf@4.0.1')
+    ]);
+    return {
+      PMTiles:pmMod.PMTiles||pmMod.default?.PMTiles,
+      VectorTile:vtMod.VectorTile||vtMod.default?.VectorTile,
+      Pbf:pbfMod.default||pbfMod.Pbf||pbfMod
+    };
+  })();
+  try{
+    return await overtureLibPromise;
+  }catch(e){
+    // A transient CDN/import failure must not poison the session forever.
+    overtureLibPromise=null;
+    throw e;
+  }
+}
+async function resolveLatestOvertureRelease(){
+  if(overtureRelease)return overtureRelease;
+  try{
+    const r=await fetchTimed('https://stac.overturemaps.org/catalog.json',{cache:'no-store'},4500);
+    if(r.ok){
+      const j=await r.json();
+      const latest=typeof j.latest==='string'?j.latest:'';
+      if(/^\d{4}-\d{2}-\d{2}\.\d+$/.test(latest))overtureRelease=latest;
+    }
+  }catch(e){}
+  if(!overtureRelease)overtureRelease=OVERTURE_FALLBACK_RELEASE;
+  return overtureRelease;
+}
+async function ensureOvertureArchive(){
+  if(overtureArchive&&overtureHeader)return {archive:overtureArchive,header:overtureHeader};
+  overtureArchive=null;overtureHeader=null;
+  overtureStatus='연결 중';updateBuildingSourceUI();
+  const [{PMTiles,VectorTile,Pbf},release]=await Promise.all([
+    ensureOvertureLibraries(),resolveLatestOvertureRelease()
+  ]);
+  if(!PMTiles||!VectorTile||!Pbf)throw new Error('Overture decoder unavailable');
+
+  // STAC latest first; if that release/PMTiles is temporarily unavailable,
+  // retry once with a known-good release instead of caching a half-open archive.
+  const candidates=[release];
+  if(release!==OVERTURE_FALLBACK_RELEASE)candidates.push(OVERTURE_FALLBACK_RELEASE);
+  let lastErr=null;
+  for(const candidate of candidates){
+    try{
+      const url=`https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/${candidate}/buildings.pmtiles`;
+      const archive=new PMTiles(url);
+      const header=await archive.getHeader();
+      if(!header)throw new Error(`Overture PMTiles header unavailable: ${candidate}`);
+      archive._ShadeWayVectorTile=VectorTile;
+      archive._ShadeWayPbf=Pbf;
+      overtureArchive=archive;overtureHeader=header;overtureRelease=candidate;
+      overtureStatus='준비 완료';
+      if(!overtureAttributionAdded&&map?.attributionControl){
+        map.attributionControl.addAttribution('Overture Maps Foundation');
+        overtureAttributionAdded=true;
+      }
+      updateBuildingSourceUI();
+      return {archive:overtureArchive,header:overtureHeader};
+    }catch(e){
+      lastErr=e;
+      overtureArchive=null;overtureHeader=null;
+      overtureTileCache.clear();
+    }
+  }
+  overtureStatus='실패';updateBuildingSourceUI();
+  throw lastErr||new Error('Overture PMTiles unavailable');
+}
+function lngToTileX(lng,z){
+  const n=2**z;return Math.max(0,Math.min(n-1,Math.floor((lng+180)/360*n)));
+}
+function latToTileY(lat,z){
+  const n=2**z,r=lat*Math.PI/180;
+  return Math.max(0,Math.min(n-1,Math.floor((1-Math.asinh(Math.tan(r))/Math.PI)/2*n)));
+}
+function overtureTileCoords(bounds,z,maxTiles=6){
+  let x0=lngToTileX(bounds.getWest(),z),x1=lngToTileX(bounds.getEast(),z);
+  let y0=latToTileY(bounds.getNorth(),z),y1=latToTileY(bounds.getSouth(),z);
+  const out=[];
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)out.push({z,x,y});
+  const c=map.getCenter(),cx=lngToTileX(c.lng,z),cy=latToTileY(c.lat,z);
+  return out.sort((a,b)=>(Math.abs(a.x-cx)+Math.abs(a.y-cy))-(Math.abs(b.x-cx)+Math.abs(b.y-cy))).slice(0,maxTiles);
+}
+function overtureName(props={}){
+  const n=props.names;
+  if(typeof n==='string')return n;
+  if(n?.primary)return n.primary;
+  return props.name||'';
+}
+function overtureFeatureBuildings(gj,props={},baseId=''){
+  const out=[],ge=gj?.geometry;
+  if(!ge)return out;
+  const rings=[];
+  if(ge.type==='Polygon'&&Array.isArray(ge.coordinates?.[0]))rings.push(ge.coordinates[0]);
+  if(ge.type==='MultiPolygon'){
+    for(const poly of ge.coordinates||[])if(Array.isArray(poly?.[0]))rings.push(poly[0]);
+  }
+  let idx=0;
+  for(const ring of rings){
+    const p=ring.map(c=>[+c[1],+c[0]]).filter(c=>Number.isFinite(c[0])&&Number.isFinite(c[1]));
+    if(p.length<3)continue;
+    const tags={building:'yes'};
+    const h=Number(props.height);
+    const floors=Number(props.num_floors??props.levels);
+    if(Number.isFinite(h)&&h>0)tags.height=String(h);
+    if(Number.isFinite(floors)&&floors>0)tags['building:levels']=String(floors);
+    const name=overtureName(props);if(name)tags.name=name;
+    const inf=hInfo(tags);
+    out.push({
+      id:`overture/${baseId}/${idx++}`,p,t:tags,h:inf.h,
+      src:`Overture${inf.src?` · ${inf.src}`:''}`,
+      method:inf.method,known:inf.known,isPart:false,source:'Overture'
+    });
+  }
+  return out;
+}
+function dedupeOvertureCandidates(items){
+  if(!items.length)return [];
+  const cell=.00028,index=new Map();
+  const put=(b)=>{
+    const c=polygonCenter(b.p),x=Math.floor(c[1]/cell),y=Math.floor(c[0]/cell),k=`${x},${y}`;
+    if(!index.has(k))index.set(k,[]);
+    index.get(k).push({b,c});
+  };
+  for(const b of buildings)if(b.source!=='Overture')put(b);
+  const kept=[];
+  for(const cand of items){
+    const cc=polygonCenter(cand.p),x=Math.floor(cc[1]/cell),y=Math.floor(cc[0]/cell);
+    let dup=false;
+    for(let dy=-1;dy<=1&&!dup;dy++)for(let dx=-1;dx<=1&&!dup;dx++){
+      for(const it of index.get(`${x+dx},${y+dy}`)||[]){
+        if(dist(cc,it.c)<10||pip(cc,it.b.p)||pip(it.c,cand.p)){dup=true;break}
+      }
+    }
+    if(!dup){kept.push(cand);put(cand)}
+  }
+  return kept;
+}
+async function fetchOvertureBuildingsBounds(bounds,parentSignal=null){
+  if(!overtureEnabled)return [];
+  try{
+    const {archive,header}=await ensureOvertureArchive();
+    const z=Math.max(header.minZoom||0,Math.min(header.maxZoom||14,Math.max(14,Math.floor(map.getZoom()))));
+    const coords=overtureTileCoords(bounds,z,6);
+    const all=[];
+    const VectorTile=archive._ShadeWayVectorTile,Pbf=archive._ShadeWayPbf;
+    for(const t of coords){
+      if(parentSignal?.aborted)throw new DOMException('Aborted','AbortError');
+      const key=`${overtureRelease}:${t.z}/${t.x}/${t.y}`;
+      let raw=overtureTileCache.get(key);
+      if(raw===undefined){
+        const rr=await archive.getZxy(t.z,t.x,t.y,parentSignal||undefined);
+        raw=rr?.data||null;
+        overtureTileCache.set(key,raw);
+        if(overtureTileCache.size>24)overtureTileCache.delete(overtureTileCache.keys().next().value);
+      }
+      if(!raw)continue;
+      const u8=raw instanceof Uint8Array?raw:new Uint8Array(raw);
+      const vt=new VectorTile(new Pbf(u8));
+      const layer=vt.layers?.building||vt.layers?.buildings;
+      if(!layer)continue;
+      for(let i=0;i<layer.length;i++){
+        const f=layer.feature(i);
+        const gj=f.toGeoJSON(t.x,t.y,t.z);
+        const id=f.properties?.id||f.id||`${t.z}-${t.x}-${t.y}-${i}`;
+        all.push(...overtureFeatureBuildings(gj,f.properties||{},id));
+      }
+    }
+    overtureStatus='성공';
+    updateBuildingSourceUI();
+    return dedupeOvertureCandidates(all);
+  }catch(e){
+    if(e?.name==='AbortError')throw e;
+    console.warn('Overture buildings unavailable',e);
+    overtureStatus='실패';updateBuildingSourceUI();
+    return [];
+  }
+}
+async function supplementVisibleBuildingsWithOverture(bounds,generation){
+  if(!overtureEnabled||zoomTransitionActive)return 0;
+  const serial=generation;
+  const {controller}=beginRequest('overture-buildings');
+  try{
+    const items=await fetchOvertureBuildingsBounds(bounds,controller.signal);
+    if(controller.signal.aborted||serial!==viewportLoadGeneration||zoomTransitionActive||!items.length)return 0;
+    const added=mergeBuildings(items);
+    if(added.length){
+      reestimateUnknownHeights();
+      appendBuildingsToLayer(added);
+      rebuildBuildingSpatialGrid();
+      updateSun({routeStep:6,timeline:!!lastRoutes.length});
+    }
+    updateBuildingSourceUI();
+    return added.length;
+  }catch(e){
+    if(e?.name!=='AbortError')console.warn('Overture supplement failed',e);
+    return 0;
+  }finally{
+    endRequest('overture-buildings',controller);
+  }
+}
+
 function stableViewportTiles(bounds){
   const size=STABLE_BUILDING_TILE_DEG;
   const s=bounds.getSouth(),w=bounds.getWest(),n=bounds.getNorth(),e=bounds.getEast();
@@ -2556,7 +2920,7 @@ function scheduleViewportBuildingLoad(delay=140){
     if(!zoomTransitionActive)loadVisibleBuildings();
   },Math.max(80,delay));
 }
-async function loadVisibleBuildings(force=false){
+async function loadVisibleBuildings(force=false,{awaitOverture=false}={}){
   if(!map||map.getZoom()<15){
     updateShadowLoadState('그림자 상세 표시를 위해 지도를 조금 더 확대하세요.');
     return;
@@ -2583,6 +2947,9 @@ async function loadVisibleBuildings(force=false){
   if(!pending.length){
     flushPendingBuildingLayerItems({renderShadow:false});
     updateShadowLoadState(`화면 건물 준비 완료 · ${buildings.length.toLocaleString()}개 · 안정 캐시 사용`,'ok');
+    const overtureJob=supplementVisibleBuildingsWithOverture(bounds,generation);
+    if(awaitOverture)await overtureJob;else overtureJob.catch(()=>{});
+    updateBuildingSourceUI();
     return;
   }
 
@@ -2598,7 +2965,7 @@ async function loadVisibleBuildings(force=false){
       if(controller.signal.aborted||generation!==viewportLoadGeneration||zoomTransitionActive)return;
       const key=buildingTileKey(tile);
       try{
-        const items=await fetchBuildingsBBox(tile,controller.signal,4800);
+        const items=await fetchBuildingsBBox(tile,controller.signal,4800,{forceNetwork:force});
         if(controller.signal.aborted||generation!==viewportLoadGeneration||zoomTransitionActive)return;
 
         const addedItems=mergeBuildings(items),added=addedItems.length;
@@ -2656,9 +3023,14 @@ async function loadVisibleBuildings(force=false){
     status:failed===0?'성공':(success?'부분 성공':'실패'),
     count:buildings.length,
     durationMs:performance.now()-started,
-    detail:`안정 타일 ${success}/${pending.length}`
+    detail:`OSM 안정 타일 ${success}/${pending.length}`
   });
+  updateBuildingSourceUI();
   endRequest('viewport-buildings',controller);
+  // OSM is shown first; Overture fills gaps in the background unless an explicit
+  // fresh-source verification asked us to wait for the supplemental source too.
+  const overtureJob=supplementVisibleBuildingsWithOverture(bounds,generation);
+  if(awaitOverture)await overtureJob;else overtureJob.catch(()=>{});
 }
 async function fetchBuildingsAt(a,o,radius=RADIUS,parentSignal=null){
   const key=cacheKey('bld',a,o,radius),cached=getCached(key);if(cached)return cached;
@@ -5185,13 +5557,51 @@ $('mobileTimeSlider').addEventListener('input',e=>{
 $('mobileTimeSlider').addEventListener('change',()=>{
   updateSun({routeStep:6,timeline:true,forceDynamic:true});
   updateMobileNowButton();
-  updateMobileNowButton();
   scheduleTimeWindowComparison(0);
 });
 
 $('coolBalance').addEventListener('input',()=>{selectedRouteMode='custom';updateBalanceUI();if(lastRoutes.length)reanalyze();$('bestTimeResult').innerHTML=''});
 $('maxDetour').addEventListener('input',()=>{updateBalanceUI();if(lastRoutes.length)reanalyze();$('bestTimeResult').innerHTML=''});
-$('shadowRefreshBtn').addEventListener('click',()=>{shadowModelCache.clear();updateSun({routeStep:6,timeline:true,forceDynamic:true});loadVisibleBuildings(true);status(`🌑 현재 화면 건물/그림자를 우선 다시 불러옵니다.`)});$('weatherBtn').addEventListener('click',fetchWeather);$('routeBtn').addEventListener('click',route);$('bestTimeBtn').addEventListener('click',findBestDeparture);$('walkBtn').addEventListener('click',()=>walkActive?stopWalk():startWalk());$('rerouteBtn').addEventListener('click',rerouteFromCurrent);$('clearBtn').addEventListener('click',clearRoute);
+$('shadowRefreshBtn').addEventListener('click',()=>{shadowModelCache.clear();updateSun({routeStep:6,timeline:true,forceDynamic:true});loadVisibleBuildings(true);status(`🌑 현재 화면 건물을 네트워크 원본에서 다시 확인하고 그림자를 갱신합니다.`)});
+$('overtureBuildings').addEventListener('change',()=>{
+  saveBuildingSourceSettings();
+  if(overtureEnabled){
+    const b=map.getBounds().pad(.10);
+    supplementVisibleBuildingsWithOverture(b,viewportLoadGeneration).catch(()=>{});
+  }else{
+    // Remove supplemental geometry so the toggle is truthful.
+    buildings=buildings.filter(b=>b.source!=='Overture');
+    buildingLayer.clearLayers();renderedBuildingIds.clear();
+    appendBuildingsToLayer(buildings);
+    invalidateShadowModels();rebuildBuildingSpatialGrid();updateSun({routeStep:6,timeline:!!lastRoutes.length});
+    updateBuildingSourceUI();
+  }
+});
+$('buildingFreshBtn').addEventListener('click',async()=>{
+  const btn=$('buildingFreshBtn');
+  btn.disabled=true;btn.textContent='최신 원본 확인 중…';
+  try{
+    await clearPersistentBuildingCache();
+    clearMemoryBuildingCaches();
+    overtureArchive=null;overtureHeader=null;overtureRelease='';overtureLibPromise=null;
+    overtureTileCache.clear();overtureStatus=overtureEnabled?'재연결':'끔';
+    lastOsmDataTimestamp='';
+    updateBuildingSourceUI();
+    await loadVisibleBuildings(true,{awaitOverture:overtureEnabled});
+    if(overtureEnabled&&overtureStatus==='실패'){
+      status('⚠️ OSM 최신 원본 확인은 완료했습니다. Overture는 연결에 실패해 OSM 건물로 계속 동작합니다.');
+    }else if(overtureEnabled){
+      status(`🛰 건물 캐시를 비우고 OSM 최신 원본 + Overture ${escapeHtmlText(overtureRelease||'최신 릴리스')}를 확인했습니다.`);
+    }else{
+      status('🛰 건물 캐시를 비우고 OSM 최신 원본을 다시 확인했습니다.');
+    }
+  }catch(e){
+    status(`⚠️ 최신 건물 확인 중 오류: ${escapeHtmlText(e?.message||String(e))}`);
+  }finally{
+    btn.disabled=false;btn.textContent='🛰 최신 원본 확인';
+  }
+});
+$('weatherBtn').addEventListener('click',fetchWeather);$('routeBtn').addEventListener('click',route);$('bestTimeBtn').addEventListener('click',findBestDeparture);$('walkBtn').addEventListener('click',()=>walkActive?stopWalk():startWalk());$('rerouteBtn').addEventListener('click',rerouteFromCurrent);$('clearBtn').addEventListener('click',clearRoute);
 $('timeSlider').addEventListener('input',e=>{setMinutes(+e.target.value);updateMobileNowButton();scheduleTimelineRefresh(10)});
 $('timeSlider').addEventListener('change',()=>{
   const timelineWasOpen=$('shadeDetails')?.open===true;
