@@ -1,0 +1,38 @@
+ShadeWay v1.9.4.31 Walk Camera + Direction Arrow Stability - Test Report
+
+1. npm test
+   - preflight PASS
+   - Shade Graph synthetic unit test PASS
+
+2. HTML / PWA
+   - public/index.html version: v1.9.4.31
+   - DOM ids: 215
+   - duplicate DOM ids: 0
+   - inline JavaScript syntax: PASS
+   - manifest JSON parse: PASS
+   - Service Worker syntax: PASS
+   - root HTML == public/index.html SHA-256: PASS
+
+3. Walk camera regression
+   - watchPosition no longer calls focusMapPointVisible() every GPS fix
+   - updateWalkCamera() uses a single panBy only when current position leaves the safe viewport
+   - duplicate camera movement is throttled and in-progress pan is not restarted
+   - first walk camera focus is delayed until mobile walk sheet layout settles
+   - manual drag/zoom pauses auto-follow for 7 seconds
+
+4. Current position direction arrow
+   - walking marker switches from circle to blue direction arrow
+   - heading priority: coords.heading -> GPS movement vector -> current route segment
+   - angular smoothing enabled to reduce heading jitter
+   - walk stop restores normal current-location dot
+
+5. Heading Up
+   - uses the stabilized walk navigation heading
+   - ignores tiny angle changes unless map center also changed
+   - map rotation state resets after walk stop
+
+6. Cloudflare Worker
+   - mock /api/health PASS
+   - version: 1.9.4.31-production
+
+Real-device validation still recommended on Android Chrome / Samsung Internet while physically walking.

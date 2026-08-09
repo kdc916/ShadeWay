@@ -6,12 +6,12 @@ const root=process.cwd();
 const must=['public/index.html','public/sw.js','public/manifest.webmanifest','public/_headers','src/index.js','src/shade-graph.js','wrangler.jsonc','package.json'];
 for(const f of must){if(!fs.existsSync(path.join(root,f)))throw new Error(`Missing ${f}`)}
 const html=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
-if(!html.includes('v1.9.4.30'))throw new Error('HTML version mismatch');
+if(!html.includes('v1.9.4.31'))throw new Error('HTML version mismatch');
 const ids=[...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m=>m[1]);
 const dup=[...new Set(ids.filter((x,i)=>ids.indexOf(x)!==i))];
 if(dup.length)throw new Error(`Duplicate DOM ids: ${dup.join(', ')}`);
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'public/manifest.webmanifest'),'utf8'));
-if(!String(manifest.name||'').includes('1.9.4.30'))throw new Error('Manifest version mismatch');
+if(!String(manifest.name||'').includes('1.9.4.31'))throw new Error('Manifest version mismatch');
 const wr=JSON.parse(fs.readFileSync(path.join(root,'wrangler.jsonc'),'utf8'));
 if(wr.assets?.directory!=='./public')throw new Error('wrangler assets directory mismatch');
 if(!Array.isArray(wr.assets?.run_worker_first)||!wr.assets.run_worker_first.includes('/api/*'))throw new Error('API worker-first routing missing');

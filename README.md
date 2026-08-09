@@ -1,4 +1,6 @@
-# ShadeWay v1.9.4.30 — Cloudflare Production Deploy
+# ShadeWay v1.9.4.31 — Walk Camera + Direction Arrow Stability
+
+이번 안정화 버전은 보행 안내 중 지도 카메라 점프를 억제하고 현재 위치를 진행 방향 화살표로 표시합니다. 기존 Cloudflare Production 구조를 그대로 유지합니다.
 
 ShadeWay는 현재 시간의 태양, 건물/수목 그림자, 날씨/UV, 보행 속도와 경사를 이용해 **직사광선 노출을 줄이는 보행 경로**를 찾는 PWA입니다.
 

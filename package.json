@@ -1,6 +1,6 @@
 {
   "name": "shadeway-cloud-production",
-  "version": "1.9.4-30",
+  "version": "1.9.4-31",
   "private": true,
   "type": "module",
   "scripts": {
