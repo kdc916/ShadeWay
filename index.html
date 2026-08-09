@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ShadeWay MVP v1.9.4.23</title>
+<title>ShadeWay MVP v1.9.4.26</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{color-scheme:dark;--bg:#0b1118;--panel:#101925;--card:#162232;--line:#2a3a4e;--text:#edf6ff;--muted:#9bb0c6;--accent:#62d58e}
@@ -1122,6 +1122,78 @@ body.map-zooming .leaflet-tooltip-pane{
   }
 }
 
+
+
+/* ================================================================
+   v1.9.4.25 Mobile Home Shade Time + Separate Settings
+   First screen: current-location shade timeline before destination search.
+   Settings groups are hidden from the normal mobile flow and opened explicitly.
+   ================================================================ */
+.mobileHomeShadeTime{display:none}
+@media(max-width:800px){
+  body:not(.has-route):not(.walk-mode):not(.mobile-settings-open) .mobileHomeShadeTime{
+    display:block;
+    margin:8px 0 9px;padding:9px;
+    border:1px solid #2b3d51;border-radius:13px;
+    background:linear-gradient(180deg,#111c29,#0d1722);
+    box-shadow:inset 0 1px rgba(255,255,255,.025)
+  }
+  .mobileHomeShadeHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+  .mobileHomeShadeHead>div{display:flex;align-items:center;min-width:0;gap:6px}
+  .homeShadeGlyph{width:25px;height:25px;display:grid;place-items:center;border-radius:8px;background:#1d2b3b;color:#ffb36b;font-size:14px;flex:0 0 25px}
+  .mobileHomeShadeHead b{font-size:11px;letter-spacing:.55px;color:#dce9f4;white-space:nowrap}
+  .mobileHomeShadeHead small{font-size:9px;color:#7790a5;white-space:nowrap}
+  .mobileHomeSettingsBtn{
+    width:auto!important;min-width:70px!important;height:32px!important;min-height:32px!important;
+    margin:0!important;padding:0 9px!important;border:1px solid #33485e!important;border-radius:9px!important;
+    background:#24364a!important;color:#e6f0f8!important;font-size:10px!important;font-weight:850!important
+  }
+  .mobileHomeShadeControls{display:grid;grid-template-columns:52px minmax(0,1fr) 52px;align-items:center;gap:7px}
+  .mobileHomeNowBtn{
+    width:auto!important;height:32px!important;min-height:32px!important;margin:0!important;padding:0 7px!important;
+    border:1px solid #35506b!important;border-radius:8px!important;background:#182536!important;color:#b9cce0!important;
+    font-size:10px!important;font-weight:850!important
+  }
+  .mobileHomeNowBtn.live{border-color:#2b6445!important;background:#163023!important;color:#a8f5c2!important}
+  #mobileHomeTimeSlider{appearance:none;width:100%;height:24px;margin:0;background:transparent}
+  #mobileHomeTimeSlider::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(90deg,#ff9b52 0%,#d19061 36%,#526b87 72%,#394d65 100%)}
+  #mobileHomeTimeSlider::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;margin-top:-6px;background:#edf6ff;border:4px solid #62d58e;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+  #mobileHomeTimeSlider::-moz-range-track{height:6px;border-radius:99px;background:#526b87}
+  #mobileHomeTimeSlider::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#edf6ff;border:4px solid #62d58e}
+  .mobileHomeTimeValue{text-align:right;line-height:1.02}
+  .mobileHomeTimeValue small{display:block;color:#74899d;font-size:8px;margin-bottom:2px}
+  .mobileHomeTimeValue b{color:#edf6ff;font-size:15px}
+  .mobileHomeShadeHint{margin-top:5px;color:#71879b;font-size:8px;line-height:1.35}
+
+  /* Configuration is no longer part of the normal first-screen scroll. */
+  body:not(.mobile-settings-open) #mobileToolsDetails,
+  body:not(.mobile-settings-open) #routePrefsDetails,
+  body:not(.mobile-settings-open) #shadeDetails,
+  body:not(.mobile-settings-open) #heatDetails,
+  body:not(.mobile-settings-open) #walkSettingsDetails,
+  body:not(.mobile-settings-open) #diagDetails{display:none!important}
+
+  /* Settings is an explicit, separate mobile sheet. */
+  body.mobile-settings-open .mobileHomeShadeTime{display:none!important}
+  body.mobile-settings-open #mobileNavSummary,
+  body.mobile-settings-open .unifiedHint,
+  body.mobile-settings-open .stepTabs,
+  body.mobile-settings-open #status{display:none!important}
+  body.mobile-settings-open #mobileToolsDetails,
+  body.mobile-settings-open #routePrefsDetails,
+  body.mobile-settings-open #shadeDetails,
+  body.mobile-settings-open #heatDetails,
+  body.mobile-settings-open #walkSettingsDetails,
+  body.mobile-settings-open #diagDetails{display:block!important}
+  body.mobile-settings-open .title:after{content:' · 설정'!important}
+  body.mobile-settings-open #stageRoute>.section{margin-top:0!important;padding-top:0!important;border-top:0!important}
+  body.mobile-settings-open aside{padding-top:9px!important}
+
+  /* v1.9.4.26: prevent Chrome/Samsung Internet scroll anchoring from
+     reusing the settings-sheet scroll position when returning home. */
+  body.mobile-settings-open aside,
+  body.mobile-settings-closing aside{overflow-anchor:none!important}
+}
 </style>
 </head>
 <body>
@@ -1131,7 +1203,20 @@ body.map-zooming .leaflet-tooltip-pane{
   <div class="sheetGrip"></div>
   <button id="sheetToggleBtn" class="sheetToggle" type="button" aria-label="메뉴 크게 보기">⌃</button>
 </div>
-<div class="title">🌳 ShadeWay</div><div id="mobileQuickStatus" class="mobileQuickStatus">📍 현재 위치 확인 중</div><div id="mobileNavSummary" class="mobileNavSummary">목적지를 정하면 추천 경로의 시간·거리·그늘을 가장 먼저 보여줍니다.</div><div class="sub">MVP v1.9.4.23 · Mobile Nearest Search Popup · OSM + Overture</div><div class="unifiedHint">목적지 검색 → 경로 분석 → 실시간 보행을 한 패널에서 바로 사용합니다.</div>
+<div class="title">🌳 ShadeWay</div><div id="mobileQuickStatus" class="mobileQuickStatus">📍 현재 위치 확인 중</div>
+<div id="mobileHomeShadeTime" class="mobileHomeShadeTime" aria-label="현재 위치 그림자 타임라인">
+  <div class="mobileHomeShadeHead">
+    <div><span class="homeShadeGlyph">◐</span><b>SHADE TIME</b><small>현재 위치 그림자</small></div>
+    <button id="mobileHomeSettingsBtn" class="mobileHomeSettingsBtn" type="button" aria-label="설정 열기">⚙ 설정</button>
+  </div>
+  <div class="mobileHomeShadeControls">
+    <button id="mobileHomeNowBtn" class="mobileHomeNowBtn" type="button">지금</button>
+    <input id="mobileHomeTimeSlider" type="range" min="300" max="1260" step="5" value="600" aria-label="현재 위치 그림자 시간">
+    <div class="mobileHomeTimeValue"><small>선택</small><b id="mobileHomeTimeText">10:00</b></div>
+  </div>
+  <div class="mobileHomeShadeHint">시간을 움직이면 지도 그림자가 바로 갱신됩니다.</div>
+</div>
+<div id="mobileNavSummary" class="mobileNavSummary">목적지를 정하면 추천 경로의 시간·거리·그늘을 가장 먼저 보여줍니다.</div><div class="sub">MVP v1.9.4.26 · Settings Close Stability · OSM + Overture</div><div class="unifiedHint">목적지 검색 → 경로 분석 → 실시간 보행을 한 패널에서 바로 사용합니다.</div>
 <div class="stepTabs hideWalk" aria-label="ShadeWay 단계">
   <button id="tabSearch" class="stepTab active" type="button" aria-current="step">1. 검색</button>
   <button id="tabRoute" class="stepTab" type="button" aria-disabled="true">2. 경로</button>
@@ -1335,7 +1420,7 @@ body.map-zooming .leaflet-tooltip-pane{
     <span>ShadeWay 실시간 그림자 기준</span>
   </div>
   <div class="mobileRouteActions">
-    <button id="mobileRouteSettingsBtn" class="mobileRouteSettingsBtn" type="button"><span>⚙</span><small>경로 설정</small></button>
+    <button id="mobileRouteSettingsBtn" class="mobileRouteSettingsBtn" type="button"><span>⚙</span><small>설정</small></button>
     <button id="mobileRouteFollowBtn" class="mobileRouteFollowBtn" type="button"><span class="followArrow">↑</span> 따라가기</button>
   </div>
 </div>
@@ -1452,6 +1537,18 @@ map.createPane('routeNavPane');map.getPane('routeNavPane').style.zIndex=520; // 
 map.createPane('routeMainPane');map.getPane('routeMainPane').style.zIndex=540;
 map.createPane('routeShadePane');map.getPane('routeShadePane').style.zIndex=555;
 map.createPane('crossingPane');map.getPane('crossingPane').style.zIndex=595;
+
+// v1.9.4.24: keep map place/building/street text readable above ShadeWay geometry.
+// OSM Standard is a raster tile, so its labels cannot be reordered independently.
+// A transparent labels-only tile layer is therefore rendered in its own high pane.
+map.createPane('mapTextPane');map.getPane('mapTextPane').style.zIndex=615;
+map.getPane('mapTextPane').style.pointerEvents='none';
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{
+  pane:'mapTextPane',subdomains:'abcd',maxZoom:20,
+  attribution:'&copy; CARTO',
+  updateWhenIdle:true,keepBuffer:2
+}).addTo(map);
+
 map.createPane('routeLabelPane');map.getPane('routeLabelPane').style.zIndex=625;
 map.getPane('routeLabelPane').style.pointerEvents='none';
 
@@ -1487,6 +1584,8 @@ function setMinutes(m){
   $('timeText').textContent=t;$('timeInput').value=t;
   if($('mobileTimeSlider'))$('mobileTimeSlider').value=m;
   if($('mobileTimeText'))$('mobileTimeText').textContent=t;
+  if($('mobileHomeTimeSlider'))$('mobileHomeTimeSlider').value=m;
+  if($('mobileHomeTimeText'))$('mobileHomeTimeText').textContent=t;
 }
 function selectedDate(){let [y,m,d]=$('dateInput').value.split('-').map(Number),mins=+$('timeSlider').value;return new Date(y,m-1,d,Math.floor(mins/60),mins%60)}
 function isLeapYear(y){return y%4===0&&(y%100!==0||y%400===0)}
@@ -1613,21 +1712,58 @@ function focusCurrentLocationVisible({zoom=null,animate=true}={}){
 }
 function openMobileRouteSettings(){
   if(!isMobileLayout())return;
+  const panel=document.querySelector('aside');
+  if(panel){
+    // Remember the exact home/route sheet state so closing Settings is a true return,
+    // not a new layout transition. This also prevents one-frame scroll jumps.
+    panel.dataset.settingsReturnScroll=String(panel.scrollTop||0);
+    panel.dataset.settingsReturnSheet=document.body.classList.contains('sheet-expanded')?'expanded':
+      document.body.classList.contains('sheet-compact')?'compact':'normal';
+  }
   document.body.classList.add('mobile-settings-open');
   document.body.classList.add('sheet-expanded');
   document.body.classList.remove('sheet-compact');
   const btn=$('sheetToggleBtn');
-  if(btn){btn.textContent='✕';btn.setAttribute('aria-label','경로 설정 닫기')}
+  if(btn){btn.textContent='✕';btn.setAttribute('aria-label','설정 닫기')}
   for(const id of ['routePrefsDetails','shadeDetails','heatDetails','walkSettingsDetails']){
     const d=$(id);if(d)d.open=false;
   }
+  // Settings always opens from its own top. Do it before the next paint.
+  if(panel)panel.scrollTop=0;
   setTimeout(()=>{map?.invalidateSize();updateMobileSheetMetrics()},80);
 }
 function closeMobileRouteSettings(){
-  document.body.classList.remove('mobile-settings-open','sheet-expanded','sheet-compact');
+  const body=document.body;
+  const panel=document.querySelector('aside');
+  const returnScroll=panel?Math.max(0,Number(panel.dataset.settingsReturnScroll)||0):0;
+  const returnSheet=panel?.dataset.settingsReturnSheet||'normal';
+
+  // Disable scroll anchoring before changing which large groups are displayed.
+  // Reset the Settings scroll in the same JS task, so the browser never paints
+  // the normal menu with the old Settings scroll offset.
+  body.classList.add('mobile-settings-closing');
+  if(panel)panel.scrollTop=0;
+  body.classList.remove('mobile-settings-open','sheet-expanded','sheet-compact');
+  if(returnSheet==='expanded')body.classList.add('sheet-expanded');
+  else if(returnSheet==='compact')body.classList.add('sheet-compact');
+  if(panel)panel.scrollTop=returnScroll;
+
   const btn=$('sheetToggleBtn');
-  if(btn){btn.textContent='⌃';btn.setAttribute('aria-label','메뉴 크게 보기')}
-  setTimeout(()=>{map?.invalidateSize();updateMobileSheetMetrics()},80);
+  if(btn){
+    btn.textContent=returnSheet==='expanded'?'⌄':'⌃';
+    btn.setAttribute('aria-label',returnSheet==='expanded'?'메뉴 작게 보기':'메뉴 크게 보기');
+  }
+
+  requestAnimationFrame(()=>{
+    // Re-assert after layout. Some mobile Chromium builds clamp scrollTop while
+    // hidden settings groups are being removed from layout.
+    if(panel)panel.scrollTop=returnScroll;
+    body.classList.remove('mobile-settings-closing');
+    requestAnimationFrame(()=>{
+      map?.invalidateSize();
+      updateMobileSheetMetrics();
+    });
+  });
 }
 function setCurrentTimelineNow(){
   const d=new Date();
@@ -1639,12 +1775,14 @@ function setCurrentTimelineNow(){
   updateMobileNowButton();
 }
 function updateMobileNowButton(){
-  const b=$('mobileNowBtn');if(!b)return;
   const d=new Date(),now=Math.max(300,Math.min(1260,Math.round((d.getHours()*60+d.getMinutes())/5)*5));
   const sameDate=$('dateInput').value===`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const close=Math.abs(+$('timeSlider').value-now)<=5;
-  b.classList.toggle('live',sameDate&&close);
-  b.textContent=sameDate&&close?'● LIVE':'지금';
+  for(const id of ['mobileNowBtn','mobileHomeNowBtn']){
+    const b=$(id);if(!b)continue;
+    b.classList.toggle('live',sameDate&&close);
+    b.textContent=sameDate&&close?'● LIVE':'지금';
+  }
 }
 
 function setSheetState(state='normal'){
@@ -3976,6 +4114,7 @@ function routeDepthSummary(){
     alternatives:+map.getPane('routeAltPane')?.style.zIndex||0,
     mainRoute:+map.getPane('routeMainPane')?.style.zIndex||0,
     shadeStripe:+map.getPane('routeShadePane')?.style.zIndex||0,
+    mapText:+map.getPane('mapTextPane')?.style.zIndex||0,
     labels:+map.getPane('routeLabelPane')?.style.zIndex||0,
     walkMarkers:+map.getPane('walkMarkerPane')?.style.zIndex||0
   };
@@ -5595,6 +5734,20 @@ $('mobileTimeSlider').addEventListener('change',()=>{
   updateSun({routeStep:6,timeline:true,forceDynamic:true});
   updateMobileNowButton();
   scheduleTimeWindowComparison(0);
+});
+
+$('mobileHomeSettingsBtn').addEventListener('click',openMobileRouteSettings);
+$('mobileHomeNowBtn').addEventListener('click',setCurrentTimelineNow);
+$('mobileHomeTimeSlider').addEventListener('input',e=>{
+  setMinutes(+e.target.value);
+  updateMobileNowButton();
+  // No route is required: update the current map/building shadows immediately.
+  scheduleTimelineRefresh(10);
+});
+$('mobileHomeTimeSlider').addEventListener('change',()=>{
+  updateSun({routeStep:10,timeline:!!lastRoutes.length,forceDynamic:true});
+  updateMobileNowButton();
+  if(lastRoutes.length)scheduleTimeWindowComparison(0);
 });
 
 $('coolBalance').addEventListener('input',()=>{selectedRouteMode='custom';updateBalanceUI();if(lastRoutes.length)reanalyze();$('bestTimeResult').innerHTML=''});
