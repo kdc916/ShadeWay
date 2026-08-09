@@ -1,0 +1,42 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "shadeway",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-09",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "ALLOW_TELEMETRY": "false",
+    "VWORLD_TYPENAME": "lt_c_spbd",
+    "R2_PM_TILES_KEY": "korea-buildings.pmtiles",
+    "SHADE_GRAPH_MAX_METERS": "6000"
+  },
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMITER",
+      "namespace_id": "1942901",
+      "simple": {
+        "limit": 180,
+        "period": 60
+      }
+    },
+    {
+      "name": "SHADE_ROUTE_RATE_LIMITER",
+      "namespace_id": "1942902",
+      "simple": {
+        "limit": 12,
+        "period": 60
+      }
+    }
+  ]
+}

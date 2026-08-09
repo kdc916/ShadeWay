@@ -1,0 +1,28 @@
+{
+  "id": "./",
+  "name": "ShadeWay v1.9.4.30",
+  "short_name": "ShadeWay",
+  "description": "Shade-aware walking navigation deployed with Cloudflare Workers + GitHub integration, with Shade Graph beta.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b1118",
+  "theme_color": "#0b1118",
+  "lang": "ko-KR",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

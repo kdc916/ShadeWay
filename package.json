@@ -1,0 +1,17 @@
+{
+  "name": "shadeway-cloud-production",
+  "version": "1.9.4-30",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "preview": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test:graph": "node tests/shade-graph.test.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "test": "npm run preflight && npm run test:graph"
+  },
+  "devDependencies": {
+    "wrangler": "^4.36.0"
+  }
+}

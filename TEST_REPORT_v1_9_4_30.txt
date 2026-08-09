@@ -1,0 +1,65 @@
+ShadeWay v1.9.4.30 Cloudflare Production Deploy - Test Report
+================================================================
+Date: 2026-08-09
+
+PASS
+----
+1. npm test
+   - scripts/preflight.mjs PASS
+   - Shade Graph synthetic unit test PASS
+
+2. HTML / DOM
+   - public/index.html version: v1.9.4.30
+   - DOM IDs: 215
+   - duplicate IDs: 0
+   - $() DOM references: 193
+   - missing referenced IDs: 0
+   - inline JavaScript syntax: PASS
+
+3. Worker / PWA syntax
+   - src/index.js: PASS
+   - src/shade-graph.js: PASS
+   - public/sw.js: PASS
+   - manifest.webmanifest JSON parse: PASS
+   - wrangler.jsonc JSON parse / active placeholder check: PASS
+
+4. Worker shallow runtime mock
+   - GET /api/health: HTTP 200
+   - service: ShadeWay Cloud Backend
+   - version: 1.9.4.30-production
+   - mode: production
+   - Shade Graph max distance: 6000m
+
+5. Rate Limit mock
+   - blocked request: HTTP 429
+   - Retry-After: 60
+   - JSON retryAfterSeconds: 60
+
+6. Artifact equality
+   - root standalone HTML SHA-256:
+     9414dc927efd0c88e95d036a3bb1b2d13768e30001a376e45508186dbbe848e2
+   - public/index.html SHA-256:
+     9414dc927efd0c88e95d036a3bb1b2d13768e30001a376e45508186dbbe848e2
+   - identical: YES
+
+NOT EXECUTED IN THIS SANDBOX
+----------------------------
+1. Real Cloudflare Workers deploy
+   - Cloudflare account/authentication is not available in this environment.
+
+2. Wrangler package install / wrangler deploy --dry-run
+   - The sandbox's internal npm mirror returned 404 for the wrangler package.
+   - This is an environment/package-mirror limitation, not an application test failure.
+   - Node-only project tests above do not require Wrangler and passed.
+
+3. Real external API deep health / mobile field test
+   - Must be performed after GitHub -> Cloudflare deployment.
+
+Recommended first production checks
+-----------------------------------
+1. Open deployed Worker URL.
+2. Open /api/health and confirm ok=true.
+3. App Settings -> Cloud Backend -> Backend check.
+4. Run Deep Test once.
+5. Search a destination and verify route-first behavior.
+6. Verify Shade Graph candidate is asynchronous and fallback remains functional.
