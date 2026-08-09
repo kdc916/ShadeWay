@@ -1,0 +1,31 @@
+ShadeWay v1.9.4.32 Walk Arrow + Steps Fix - Test Report
+
+Result: PASS
+
+1. npm test
+   - Preflight PASS
+   - 215 DOM IDs
+   - duplicate IDs: 0
+   - inline JS syntax: PASS
+   - Worker JS syntax: PASS
+   - Shade Graph JS syntax: PASS
+   - Service Worker JS syntax: PASS
+   - manifest / wrangler checks: PASS
+   - Shade Graph synthetic test: PASS
+
+2. Walk direction regression checks
+   - reverse-heading guard present
+   - GPS movement vector is highest-priority display heading after sufficient movement
+   - route forward bearing is used as startup/reversal reference
+   - 270° candidate vs 90° route reference -> corrected to 90°
+   - correct 90° candidate vs 90° route reference -> remains 90°
+
+3. Steps UI regression checks
+   - map-following step badge removed
+   - Turn HUD remaining steps = remaining route distance / estimated stride
+   - active walk card cumulative counter relabeled to '걸은 걸음'
+   - current marker popup identifies cumulative movement steps only when opened
+
+4. Package consistency
+   - public/index.html and standalone HTML are byte-identical
+   - Cloudflare Worker / PWA / Shade Graph retained
