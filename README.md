@@ -1,4 +1,4 @@
-# ShadeWay v1.9.4.32 — Walk Arrow + Steps Fix
+# ShadeWay v1.9.4.33 — Walk Route Arrow Fix
 
 이번 안정화 버전은 실제 모바일 보행 테스트에서 발견된 진행 방향 화살표 180° 역방향 문제와 걸음 수 UI 의미/겹침 문제를 수정합니다. v1.9.4.31의 안정화된 보행 카메라와 기존 Cloudflare Production 구조는 그대로 유지합니다.
 
@@ -88,3 +88,11 @@ wrangler.jsonc           기본 운영 설정 (D1/R2 불필요)
 ## License
 
 이 저장소에는 라이선스를 자동 지정하지 않았습니다. 공개 저장소로 배포하기 전, 소스 재사용 조건을 직접 결정한 뒤 `LICENSE` 파일을 추가하세요.
+
+
+## v1.9.4.33 Follow navigation fix
+
+- Follow 시작 후 경로 중간의 파란 회전/방향 마커를 지도에서 제거했습니다. 회전 안내는 상단 Turn HUD에만 표시됩니다.
+- 현재 위치 파란 화살표는 경로 위에 있을 때 GPS 센서 heading 대신 **현재 경로의 14m 전방 방향**을 우선 사용합니다.
+- Android 기기에서 heading 값이 180° 반전되어 보이던 실제 기기 문제를 회피합니다.
+- 경로 이탈 시에는 실제 GPS 이동 벡터/heading fallback을 사용합니다.

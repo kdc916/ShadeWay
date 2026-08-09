@@ -1,6 +1,6 @@
 {
   "id": "./",
-  "name": "ShadeWay v1.9.4.32",
+  "name": "ShadeWay v1.9.4.33",
   "short_name": "ShadeWay",
   "description": "Shade-aware walking navigation deployed with Cloudflare Workers + GitHub integration, with Shade Graph beta.",
   "start_url": "./",

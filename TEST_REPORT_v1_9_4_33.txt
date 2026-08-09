@@ -1,0 +1,9 @@
+ShadeWay v1.9.4.33 Walk Route Arrow Fix - Test Report
+
+Targeted fixes:
+- Follow mode maneuverLayer map marker disabled; Turn HUD retained.
+- On-route walk arrow uses 14 m forward route bearing as authoritative heading.
+- Off-route fallback retains GPS motion/browser heading logic.
+- v1.9.4.32 remaining/walked steps semantics retained.
+
+Run `npm test` for syntax, manifest/wrangler, DOM and shade-graph regression checks.
