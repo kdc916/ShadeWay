@@ -1,6 +1,6 @@
 # GitHub → Cloudflare Workers 자동 배포 가이드
 
-기준: ShadeWay v1.9.4.33
+기준: ShadeWay v1.9.4.34
 
 ## 1. GitHub 저장소 만들기
 
@@ -51,7 +51,7 @@ https://<worker-host>/api/health
 {
   "ok": true,
   "service": "ShadeWay Cloud Backend",
-  "version": "1.9.4.33-production",
+  "version": "1.9.4.34-production",
   "mode": "production"
 }
 ```

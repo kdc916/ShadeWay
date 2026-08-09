@@ -1,0 +1,13 @@
+ShadeWay v1.9.4.34 — Live Compass Arrow
+
+Validation
+- npm test: PASS
+- Preflight: PASS · 215 DOM ids · duplicate 0 · manifest/wrangler/syntax OK
+- Shade Graph synthetic test: PASS
+- Worker/Service Worker/HTML inline JS syntax: PASS
+- Live compass hooks present: deviceorientationabsolute + deviceorientation + iOS requestPermission
+- Fresh compass heading has priority over GPS/route fallback
+- Follow maneuver marker removal retained
+- Walk camera stability patch retained
+
+Real-device validation still required for physical compass behavior on Android Chrome/Samsung Internet/iOS Safari.

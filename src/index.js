@@ -1,6 +1,6 @@
 import { bboxFor, overpassQueryForBBox, routeShadeGraph } from './shade-graph.js';
 
-const VERSION = '1.9.4.33-production';
+const VERSION = '1.9.4.34-production';
 const JSON_HEADERS = {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'};
 const UPSTREAM = {
   overpass:[
@@ -130,7 +130,7 @@ async function fetchOverpass(query,env,ctx,{ttl=900}={}){
         try{
           const r=await upstreamJson(ep,{
             method:'POST',
-            headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','User-Agent':'ShadeWay/1.9.4.33'},
+            headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','User-Agent':'ShadeWay/1.9.4.34'},
             body:'data='+encodeURIComponent(query)
           },env,ctx,{provider:'Overpass',timeout:12000});
           if(env.BUILDING_DATA?.put){
@@ -171,7 +171,7 @@ async function proxySearch(url,env,ctx){
   const key=await sha256(p.toString());
   const out=await cacheJson(`search/${key}`,300,ctx,async()=>{
     const r=await upstreamJson(`${UPSTREAM.nominatim}?${p}`,{
-      headers:{'Accept':'application/json','User-Agent':'ShadeWay/1.9.4.33 (walking navigation research)'}
+      headers:{'Accept':'application/json','User-Agent':'ShadeWay/1.9.4.34 (walking navigation research)'}
     },env,ctx,{provider:'Nominatim',timeout:7000});
     return r.data;
   });
@@ -309,7 +309,7 @@ async function deepHealth(env,ctx){
   const tests={};
   const run=async(name,fn)=>{const s=Date.now();try{await fn();tests[name]={ok:true,ms:Date.now()-s}}catch(e){tests[name]={ok:false,ms:Date.now()-s,error:e?.message||String(e)}}};
   await Promise.all([
-    run('nominatim',async()=>{await upstreamJson(`${UPSTREAM.nominatim}?format=jsonv2&limit=1&q=Seoul`,{headers:{'User-Agent':'ShadeWay/1.9.4.33'}},env,ctx,{provider:'Nominatim',timeout:5000})}),
+    run('nominatim',async()=>{await upstreamJson(`${UPSTREAM.nominatim}?format=jsonv2&limit=1&q=Seoul`,{headers:{'User-Agent':'ShadeWay/1.9.4.34'}},env,ctx,{provider:'Nominatim',timeout:5000})}),
     run('openMeteo',async()=>{await upstreamJson(`${UPSTREAM.weather}?latitude=37.5665&longitude=126.978&current=temperature_2m`,{},env,ctx,{provider:'Open-Meteo',timeout:5000})}),
     run('osrm',async()=>{await upstreamJson(`${UPSTREAM.osrm}/126.978,37.5665;126.979,37.567?overview=false&steps=false`,{},env,ctx,{provider:'OSRM',timeout:6000})}),
     run('overpass',async()=>{await fetchOverpass(`[out:json][timeout:5];node(37.565,126.977,37.566,126.978);out 1;`,env,ctx,{ttl:60})})
