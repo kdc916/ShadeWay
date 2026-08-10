@@ -1,0 +1,35 @@
+ShadeWay v1.9.4.35 — Always-Live GPS · Real-time Speed · Faster Shadows
+
+Validation
+- npm test: PASS
+- HTML inline JavaScript syntax: PASS
+- Worker JavaScript syntax: PASS
+- Shade Graph module syntax: PASS
+- Service Worker syntax: PASS
+- Manifest / wrangler parse: PASS
+- DOM IDs: 218, duplicates: 0
+- Shade Graph synthetic unit test: PASS
+- Shared geolocation watch structural check: PASS (exactly one watchPosition)
+- startWalk route-only watch regression check: PASS
+- stopWalk global clearWatch regression check: PASS
+- no-route live speed UI check: PASS
+- GPS stale-fix watchdog presence check: PASS
+- live environment/shadow refresh presence check: PASS
+
+Behavior implemented
+- GPS watch starts independently of destination/route/follow mode.
+- Guidance stop does not stop GPS watch.
+- If watch fixes are stale >6.5s while foregrounded, high-accuracy getCurrentPosition is used as a recovery poll.
+- Foreground/pageshow recovery requests a fresh fix when stale.
+- Mobile home displays real-time km/h without a route.
+- coords.speed fallback uses point-to-point distance/time with accuracy-based jitter suppression.
+- Current live speed and learned ETA walking speed are separated.
+- No-route shadow render refresh: >=8m movement / limited to >=1.4s cadence, plus 5s stale threshold.
+- Current GPS environment prefetch: 360m building/vegetation, >=45m movement or ~10s stale, >=4.5s request cadence.
+- Viewport building debounce: 90ms (previously 140ms).
+
+Requires real-device validation
+- Android Chrome / Samsung Internet GPS event cadence varies by OS power/location settings.
+- Background tabs may be throttled by the browser/OS; foreground recovery is implemented.
+- Live speed quality depends on GPS accuracy and device-provided coords.speed.
+- Faster shadow/environment refresh should be checked for battery/network impact during a 10–20 minute walk.

@@ -1,4 +1,4 @@
-# ShadeWay v1.9.4.34 — Live Compass Arrow
+# ShadeWay v1.9.4.35 — Always-Live GPS + Faster Shadows
 
 이번 안정화 버전은 `따라가기` 중 현재 위치 화살표를 **휴대폰의 실시간 Compass / Device Orientation 센서**에 연결합니다. 제자리에서 휴대폰만 회전해도 화살표가 즉시 같이 회전하며, 센서가 없을 때만 경로/GPS 방향을 fallback으로 사용합니다. 기존 카메라 튐 방지, 경로 중간 회전 마커 제거, 걸음 수 UI 수정과 Cloudflare Production 구조는 그대로 유지합니다.
 
@@ -90,7 +90,7 @@ wrangler.jsonc           기본 운영 설정 (D1/R2 불필요)
 이 저장소에는 라이선스를 자동 지정하지 않았습니다. 공개 저장소로 배포하기 전, 소스 재사용 조건을 직접 결정한 뒤 `LICENSE` 파일을 추가하세요.
 
 
-## v1.9.4.34 Live Compass Arrow
+## v1.9.4.35 Always-Live GPS + Faster Shadows
 
 - Follow 시작 후 경로 중간의 파란 회전/방향 마커를 지도에서 제거했습니다. 회전 안내는 상단 Turn HUD에만 표시됩니다.
 - Android/Chromium에서는 `deviceorientationabsolute`를 사용해 휴대폰이 향하는 절대 방향을 실시간으로 읽습니다.
